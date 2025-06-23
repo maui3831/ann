@@ -11,11 +11,14 @@ def main():
 
     # Sidebar for configuration
     st.sidebar.header("Configuration")
-    gate_type = st.sidebar.selectbox(
+    st.warning("XOR, NOT, NOR, and XNOR gates are not supported yet.")
+    gate_type = st.sidebar.radio(
         "Select Logic Gate",
-        ["AND", "NAND"],
+        ["AND", "NAND", "OR", "NOR", "XOR", "XNOR", "NOT"],
         help="Choose which logic gate to train the perceptron on",
+        index=0,
     )
+    gate_type_internal = gate_type.lower()
 
     learning_rate = st.sidebar.slider(
         "Learning Rate",
@@ -40,7 +43,7 @@ def main():
 
     if st.button("Train Perceptron"):
         with st.spinner("Training perceptron..."):
-            result = train_perceptron(gate_type.lower(), learning_rate, num_iterations)
+            result = train_perceptron(gate_type_internal, learning_rate, num_iterations)
             st.session_state.W = result["W"]
             st.session_state.b = result["b"]
             st.session_state.gate_type = gate_type
@@ -108,13 +111,15 @@ def main():
         )
     # Information section
     with st.expander("About Logic Gates"):
-        st.write("""
+        st.write(
+            """
         **AND Gate:** Outputs 1 only when both inputs are 1, otherwise outputs 0.
-        
+
         **NAND Gate:** Outputs 0 only when both inputs are 1, otherwise outputs 1 (NOT AND).
-        
+
         The perceptron learns these patterns through training on the truth table data.
-        """)
+        """
+        )
 
 
 if __name__ == "__main__":
