@@ -96,13 +96,20 @@ def main():
         )
         # Input section
         st.subheader("Enter Test Inputs")
-        col1, col2 = st.columns(2)
-        with col1:
-            x1 = st.selectbox("Input 1 (x1)", [0, 1], help="First binary input")
-        with col2:
-            x2 = st.selectbox("Input 2 (x2)", [0, 1], help="Second binary input")
+        if st.session_state.gate_type == "NOT":
+            x1 = st.selectbox("Input (x1)", [0, 1], help="Single binary input for NOT gate")
+            x2 = None
+        else:
+            col1, col2 = st.columns(2)
+            with col1:
+                x1 = st.selectbox("Input 1 (x1)", [0, 1], help="First binary input")
+            with col2:
+                x2 = st.selectbox("Input 2 (x2)", [0, 1], help="Second binary input")
         if st.button("Test Model"):
-            X_test = np.array([[x1, x2]])
+            if st.session_state.gate_type == "NOT":
+                X_test = np.array([[x1]])
+            else:
+                X_test = np.array([[x1, x2]])
             if st.session_state.model_type == "ann":
                 prediction = predict_ann(
                     X_test,
@@ -111,7 +118,6 @@ def main():
                     st.session_state.W2,
                     st.session_state.b2,
                 )[0][0]
-                # For ANN, also show raw output
                 from multi_perceptron import forward_prop
                 _, _, raw_output, _ = forward_prop(
                     X_test,
@@ -126,13 +132,17 @@ def main():
                 raw_output, _ = forward_prop(X_test, st.session_state.W, st.session_state.b)
                 raw_output = raw_output[0]
             st.subheader("Test Results")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Input 1", x1)
-            with col2:
-                st.metric("Input 2", x2)
-            with col3:
+            if st.session_state.gate_type == "NOT":
+                st.metric("Input", x1)
                 st.metric("Prediction", prediction)
+            else:
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Input 1", x1)
+                with col2:
+                    st.metric("Input 2", x2)
+                with col3:
+                    st.metric("Prediction", prediction)
             st.write(f"**Raw Output (before thresholding):** {raw_output:.4f}")
             # Expected output based on gate type
             if st.session_state.gate_type == "AND":

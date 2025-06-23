@@ -61,7 +61,10 @@ def predict(X, W, b):
 
 def train_perceptron(gate, learning_rate=0.1, num_iterations=1000):
     df = _load_data(gate)
-    X = df[["x1", "x2"]].values
+    if gate == "not":
+        X = df[["x1"]].values
+    else:
+        X = df[["x1", "x2"]].values
     Y = df["y"].values
     W, b = _init_params(X.shape[1])
     W, b = train(X, Y, W, b, learning_rate, num_iterations)
@@ -94,7 +97,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     df = _load_data(args.gate)
-    X = df[["x1", "x2"]].values
+    if args.gate == "not":
+        X = df[["x1"]].values
+    else:
+        X = df[["x1", "x2"]].values
     Y = df["y"].values
     W, b = _init_params(X.shape[1])
     learning_rate = 0.1
