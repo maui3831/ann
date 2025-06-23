@@ -87,7 +87,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--gate",
         type=str,
-        choices=["and", "nand", "or"],
+        choices=["and", "nand", "or", "nor", "xor", "xnor", "not"],
         default="and",
         help="Logic gate to train the perceptron on.",
     )
