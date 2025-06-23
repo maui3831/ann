@@ -15,7 +15,7 @@ def _load_data(gate):
 
 def _init_params(n_features):
     W = np.random.rand(n_features)
-    b = np.random.rand()
+    b = 2
     return W, b
 
 
