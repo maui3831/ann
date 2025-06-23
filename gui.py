@@ -1,21 +1,21 @@
 import streamlit as st
 import numpy as np
 from perceptron import train_perceptron, predict, forward_prop
+from multi_perceptron import train_ann, predict_ann
 
 
 def main():
-    st.title("Perceptron Logic Gate Trainer & Tester")
+    st.title("Perceptron/ANN Logic Gate Trainer & Tester")
     st.write(
-        "Train a perceptron on the selected logic gate and test it with custom inputs."
+        "Train a perceptron or a 2-layer ANN (for XOR/XNOR) on the selected logic gate and test it with custom inputs."
     )
 
     # Sidebar for configuration
     st.sidebar.header("Configuration")
-    st.warning("XOR, NOT, NOR, and XNOR gates are not supported yet.")
     gate_type = st.sidebar.radio(
         "Select Logic Gate",
         ["AND", "NAND", "OR", "NOR", "XOR", "XNOR", "NOT"],
-        help="Choose which logic gate to train the perceptron on",
+        help="Choose which logic gate to train the perceptron/ANN on",
         index=0,
     )
     gate_type_internal = gate_type.lower()
@@ -41,18 +41,35 @@ def main():
     # Training section
     st.header("Training")
 
-    if st.button("Train Perceptron"):
-        with st.spinner("Training perceptron..."):
-            result = train_perceptron(gate_type_internal, learning_rate, num_iterations)
-            st.session_state.W = result["W"]
-            st.session_state.b = result["b"]
-            st.session_state.gate_type = gate_type
-            st.session_state.trained = True
-            st.session_state.df = result["df"]
-            st.session_state.preds = result["preds"]
-            st.session_state.Y = result["Y"]
-            st.session_state.X = result["X"]
-            st.success(f"Perceptron trained successfully on {gate_type} gate!")
+    if st.button("Train Model"):
+        with st.spinner("Training model..."):
+            if gate_type_internal in ["xor", "xnor"]:
+                result = train_ann(gate_type_internal, learning_rate, num_iterations)
+                st.session_state.model_type = "ann"
+                st.session_state.W1 = result["W1"]
+                st.session_state.b1 = result["b1"]
+                st.session_state.W2 = result["W2"]
+                st.session_state.b2 = result["b2"]
+                st.session_state.gate_type = gate_type
+                st.session_state.trained = True
+                st.session_state.df = result["df"]
+                st.session_state.preds = result["preds"]
+                st.session_state.Y = result["Y"]
+                st.session_state.X = result["X"]
+                st.success(f"ANN trained successfully on {gate_type} gate!")
+                st.info("A 2-layer ANN with 2 hidden neurons and ReLU activations was used.")
+            else:
+                result = train_perceptron(gate_type_internal, learning_rate, num_iterations)
+                st.session_state.model_type = "perceptron"
+                st.session_state.W = result["W"]
+                st.session_state.b = result["b"]
+                st.session_state.gate_type = gate_type
+                st.session_state.trained = True
+                st.session_state.df = result["df"]
+                st.session_state.preds = result["preds"]
+                st.session_state.Y = result["Y"]
+                st.session_state.X = result["X"]
+                st.success(f"Perceptron trained successfully on {gate_type} gate!")
             # Display training results
             col1, col2 = st.columns(2)
             with col1:
@@ -84,10 +101,30 @@ def main():
             x1 = st.selectbox("Input 1 (x1)", [0, 1], help="First binary input")
         with col2:
             x2 = st.selectbox("Input 2 (x2)", [0, 1], help="Second binary input")
-        if st.button("Test Perceptron"):
+        if st.button("Test Model"):
             X_test = np.array([[x1, x2]])
-            prediction = predict(X_test, st.session_state.W, st.session_state.b)[0]
-            raw_output, _ = forward_prop(X_test, st.session_state.W, st.session_state.b)
+            if st.session_state.model_type == "ann":
+                prediction = predict_ann(
+                    X_test,
+                    st.session_state.W1,
+                    st.session_state.b1,
+                    st.session_state.W2,
+                    st.session_state.b2,
+                )[0][0]
+                # For ANN, also show raw output
+                from multi_perceptron import forward_prop
+                _, _, raw_output, _ = forward_prop(
+                    X_test,
+                    st.session_state.W1,
+                    st.session_state.b1,
+                    st.session_state.W2,
+                    st.session_state.b2,
+                )
+                raw_output = raw_output[0][0]
+            else:
+                prediction = predict(X_test, st.session_state.W, st.session_state.b)[0]
+                raw_output, _ = forward_prop(X_test, st.session_state.W, st.session_state.b)
+                raw_output = raw_output[0]
             st.subheader("Test Results")
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -96,12 +133,22 @@ def main():
                 st.metric("Input 2", x2)
             with col3:
                 st.metric("Prediction", prediction)
-            st.write(f"**Raw Output (before thresholding):** {raw_output[0]:.4f}")
+            st.write(f"**Raw Output (before thresholding):** {raw_output:.4f}")
             # Expected output based on gate type
             if st.session_state.gate_type == "AND":
                 expected = 1 if x1 == 1 and x2 == 1 else 0
-            else:  # NAND
+            elif st.session_state.gate_type == "NAND":
                 expected = 0 if x1 == 1 and x2 == 1 else 1
+            elif st.session_state.gate_type == "OR":
+                expected = 1 if x1 == 1 or x2 == 1 else 0
+            elif st.session_state.gate_type == "NOR":
+                expected = 1 if x1 == 0 and x2 == 0 else 0
+            elif st.session_state.gate_type == "XOR":
+                expected = 1 if x1 != x2 else 0
+            elif st.session_state.gate_type == "XNOR":
+                expected = 1 if x1 == x2 else 0
+            else:  # NOT
+                expected = 1 - x1
             st.write(f"**Expected Output:** {expected}")
             st.write(f"**Correct:** {'✅' if prediction == expected else '❌'}")
             st.subheader("Visual Representation")
@@ -111,7 +158,7 @@ def main():
                 st.info("Output: 0 (False)")
     else:
         st.info(
-            "Please train the perceptron first using the 'Train Perceptron' button above."
+            "Please train the model first using the 'Train Model' button above."
         )
     # Information section
     with st.expander("About Logic Gates"):
@@ -131,7 +178,7 @@ def main():
 
         **NOT Gate:** Outputs 1 if the input is 0, and 0 if the input is 1 (inverts a single input).
 
-        The perceptron learns these patterns through training on the truth table data.
+        The perceptron or ANN learns these patterns through training on the truth table data.
         """
         )
 
