@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import argparse
 from pathlib import Path
-import pickle
 
 
 def _load_data(gate):
@@ -106,3 +105,5 @@ if __name__ == "__main__":
     print("Predictions:", preds)
     print("Actual:", Y)
     print("Accuracy:", np.mean(preds == Y))
+    print("Final Weights (W):", W)
+    print("Final Bias (b):", b)
