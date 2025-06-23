@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 from perceptron import train_perceptron, predict, forward_prop
-from multi_perceptron import train_ann, predict_ann
+from multi_perceptron import train_ann, predict_ann, forward_prop as multi_forward_prop
 
 
 def main():
@@ -118,8 +118,8 @@ def main():
                     st.session_state.W2,
                     st.session_state.b2,
                 )[0][0]
-                from multi_perceptron import forward_prop
-                _, _, raw_output, _ = forward_prop(
+                # For ANN, also show raw output
+                _, _, raw_output, _ = multi_forward_prop(
                     X_test,
                     st.session_state.W1,
                     st.session_state.b1,
