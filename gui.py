@@ -6,7 +6,7 @@ from perceptron import train_perceptron, predict, forward_prop
 def main():
     st.title("Perceptron Logic Gate Trainer & Tester")
     st.write(
-        "Train a perceptron on AND or NAND logic gates and test it with custom inputs."
+        "Train a perceptron on the selected logic gate and test it with custom inputs."
     )
 
     # Sidebar for configuration
@@ -64,7 +64,11 @@ def main():
             results_df = result["df"].copy()
             results_df["Predicted"] = result["preds"]
             results_df["Correct"] = result["preds"] == result["Y"]
-            st.dataframe(results_df, use_container_width=True)
+            st.dataframe(
+                results_df,
+                use_container_width=True,
+                hide_index=True,
+            )
 
     # Testing section
     st.header("Testing")
@@ -116,6 +120,16 @@ def main():
         **AND Gate:** Outputs 1 only when both inputs are 1, otherwise outputs 0.
 
         **NAND Gate:** Outputs 0 only when both inputs are 1, otherwise outputs 1 (NOT AND).
+
+        **OR Gate:** Outputs 1 if at least one input is 1, otherwise outputs 0.
+
+        **NOR Gate:** Outputs 1 only when both inputs are 0, otherwise outputs 0 (NOT OR).
+
+        **XOR Gate:** Outputs 1 if the inputs are different, otherwise outputs 0 (exclusive OR).
+
+        **XNOR Gate:** Outputs 1 if the inputs are the same, otherwise outputs 0 (exclusive NOR).
+
+        **NOT Gate:** Outputs 1 if the input is 0, and 0 if the input is 1 (inverts a single input).
 
         The perceptron learns these patterns through training on the truth table data.
         """
