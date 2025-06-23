@@ -1,20 +1,16 @@
 import numpy as np
 import pandas as pd
 import argparse
+from pathlib import Path
+import pickle
 
 
-def _init_data(gate):
-    data = {
-        "x1": [0, 0, 1, 1],
-        "x2": [0, 1, 0, 1],
-    }
-    if gate == "and":
-        data["y"] = [0, 0, 0, 1]
-    elif gate == "nand":
-        data["y"] = [1, 1, 1, 0]
-    else:
-        raise ValueError("Gate must be 'and' or 'nand'")
-    df = pd.DataFrame(data)
+def _load_data(gate):
+    """Load truth table data for the given gate from a CSV file."""
+    file_path = Path(__file__).parent / "data" / f"{gate}.csv"
+    if not file_path.exists():
+        raise ValueError(f"CSV file for gate '{gate}' not found at {file_path}.")
+    df = pd.read_csv(file_path)
     return df
 
 
@@ -64,20 +60,41 @@ def predict(X, W, b):
     return (A > 0.5).astype(int)
 
 
+def train_perceptron(gate, learning_rate=0.1, num_iterations=1000):
+    df = _load_data(gate)
+    X = df[["x1", "x2"]].values
+    Y = df["y"].values
+    W, b = _init_params(X.shape[1])
+    W, b = train(X, Y, W, b, learning_rate, num_iterations)
+    preds = predict(X, W, b)
+    accuracy = np.mean(preds == Y)
+    loss = compute_loss(forward_prop(X, W, b)[0], Y)
+    return {
+        "W": W,
+        "b": b,
+        "accuracy": accuracy,
+        "loss": loss,
+        "preds": preds,
+        "X": X,
+        "Y": Y,
+        "df": df,
+    }
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Train a perceptron for AND or NAND gate."
+        description="Train a perceptron for a chosen logic gate."
     )
     parser.add_argument(
         "--gate",
         type=str,
-        choices=["and", "nand"],
+        choices=["and", "nand", "or"],
         default="and",
-        help="Logic gate to train (and or nand)",
+        help="Logic gate to train the perceptron on.",
     )
     args = parser.parse_args()
 
-    df = _init_data(args.gate)
+    df = _load_data(args.gate)
     X = df[["x1", "x2"]].values
     Y = df["y"].values
     W, b = _init_params(X.shape[1])
